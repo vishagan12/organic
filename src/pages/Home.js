@@ -21,12 +21,12 @@ export function renderHomePage() {
       <!-- Ambient Glow Behind Hero -->
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[400px] sm:h-[600px] glow-botanical pointer-events-none -z-0"></div>
 
-      <!-- Hero Section with Smooth Fade In/Out Auto-Transition -->
-      <section class="w-full pt-4 sm:pt-8 lg:pt-16 pb-12 sm:pb-20 lg:pb-32 relative z-10">
+      <!-- Hero Section with Touch Swipe & Smooth Crossfade -->
+      <section id="hero-section" class="w-full pt-4 sm:pt-8 lg:pt-16 pb-12 sm:pb-20 lg:pb-32 relative z-10 select-none">
         <div class="px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-20">
           
-          <!-- Left Visual: Pre-layered Crossfade Portrait -->
-          <div class="w-full lg:w-1/2 relative group">
+          <!-- Left Visual: Pre-layered Crossfade Portrait (Swipe Enabled) -->
+          <div id="hero-carousel-container" class="w-full lg:w-1/2 relative group touch-pan-y cursor-grab active:cursor-grabbing">
             <div class="aspect-[4/3] sm:aspect-[1/1] lg:aspect-[4/5] rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-editorial group-hover:shadow-editorial-hover transition-all duration-700 relative border border-primary/10 bg-surface-container-low">
               
               <!-- Subtle vignette overlay -->
@@ -499,6 +499,71 @@ export function attachHomeEvents() {
       resetHeroInterval();
     };
   });
+
+  // Touch Swipe Gesture Support (Mobile Left/Right Swiping)
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  function handleSwipeGesture(startX, startY, endX, endY, duration) {
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+
+    // Must be predominantly horizontal with a minimum displacement of 35px
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) && duration < 700) {
+      if (diffX < 0) {
+        // Swiped LEFT -> Next slide
+        const nextSlide = (heroCurrentSlide + 1) % slides.length;
+        updateHeroSlide(nextSlide);
+      } else {
+        // Swiped RIGHT -> Previous slide
+        const prevSlide = (heroCurrentSlide - 1 + slides.length) % slides.length;
+        updateHeroSlide(prevSlide);
+      }
+      resetHeroInterval();
+    }
+  }
+
+  // Attach touch listeners to hero carousel container
+  const carouselContainer = document.getElementById('hero-carousel-container');
+  if (carouselContainer) {
+    carouselContainer.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].clientX;
+      touchStartY = e.changedTouches[0].clientY;
+      touchStartTime = Date.now();
+    }, { passive: true });
+
+    carouselContainer.addEventListener('touchend', (e) => {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const duration = Date.now() - touchStartTime;
+      handleSwipeGesture(touchStartX, touchStartY, endX, endY, duration);
+    }, { passive: true });
+  }
+
+  // Also attach to hero content text area so swiping on text moves slides
+  const contentPanel = document.getElementById('hero-content-panel');
+  if (contentPanel) {
+    let textTouchStartX = 0;
+    let textTouchStartY = 0;
+    let textTouchStartTime = 0;
+
+    contentPanel.addEventListener('touchstart', (e) => {
+      // Don't trigger swipe if tapping interactive buttons/links
+      if (e.target.closest('a, button, input')) return;
+      textTouchStartX = e.changedTouches[0].clientX;
+      textTouchStartY = e.changedTouches[0].clientY;
+      textTouchStartTime = Date.now();
+    }, { passive: true });
+
+    contentPanel.addEventListener('touchend', (e) => {
+      if (e.target.closest('a, button, input')) return;
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const duration = Date.now() - textTouchStartTime;
+      handleSwipeGesture(textTouchStartX, textTouchStartY, endX, endY, duration);
+    }, { passive: true });
+  }
 
   // 10-Second Auto-Cycling Timer
   function startHeroInterval() {
