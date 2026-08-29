@@ -4,6 +4,7 @@ import { getProductById } from './store/products.js';
 import { subscribeCart, getTotals } from './store/cart.js';
 import { subscribeLanguage, getLanguage } from './store/i18n.js';
 import { showToast } from './components/Toast.js';
+import { handleDelegatedCartClick, updateAllProductActionSlots } from './utils/productActions.js';
 import { renderHeader, attachHeaderEvents } from './components/Header.js';
 import { renderFooter } from './components/Footer.js';
 import { renderCartDrawer, attachCartDrawerEvents, openCartDrawer, refreshCartDrawerUI } from './components/CartDrawer.js';
@@ -71,7 +72,7 @@ function renderApp() {
   attachSearchModalEvents();
 
   if (route.name === 'home') {
-    attachHomeEvents(() => renderApp());
+    attachHomeEvents();
   } else if (route.name === 'shop') {
     attachShopEvents(() => renderApp());
   } else if (route.name === 'product-detail') {
@@ -120,13 +121,16 @@ function attachGlobalEvents() {
   }
 }
 
+// Global delegated cart button listener (zero screen flash)
+document.addEventListener('click', handleDelegatedCartClick);
+
 // Re-render when hash changes & scroll to top
 window.addEventListener('hashchange', () => {
   renderApp();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// Update cart badges and dynamically update drawer when cart changes
+// Update cart badges, drawer, and product button action slots without whole-page DOM wiping
 subscribeCart(() => {
   const totals = getTotals();
   const badge = document.getElementById('header-cart-badge');
@@ -141,6 +145,7 @@ subscribeCart(() => {
     }
   }
   refreshCartDrawerUI();
+  updateAllProductActionSlots();
 });
 
 // Re-render when language changes
