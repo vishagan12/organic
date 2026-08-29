@@ -55,6 +55,16 @@ export function getCartItems() {
   return [...cartItems];
 }
 
+export function getProductTotalQuantity(productId) {
+  return cartItems
+    .filter(item => item.product.id === productId)
+    .reduce((acc, item) => acc + item.quantity, 0);
+}
+
+export function getCartItemByProduct(productId) {
+  return cartItems.find(item => item.product.id === productId) || null;
+}
+
 export function addToCart(product, quantity = 1, size = null, isSubscription = false) {
   const itemSize = size || (product.sizes ? product.sizes[0] : 'Standard');
   const existingIndex = cartItems.findIndex(
@@ -74,6 +84,26 @@ export function addToCart(product, quantity = 1, size = null, isSubscription = f
   }
   persist();
   return true;
+}
+
+export function increaseProductQuantity(productId) {
+  const existing = cartItems.find(item => item.product.id === productId);
+  if (existing) {
+    existing.quantity += 1;
+    persist();
+  }
+}
+
+export function decreaseProductQuantity(productId) {
+  const existing = cartItems.find(item => item.product.id === productId);
+  if (existing) {
+    if (existing.quantity <= 1) {
+      removeFromCart(existing.id);
+    } else {
+      existing.quantity -= 1;
+      persist();
+    }
+  }
 }
 
 export function updateQuantity(itemId, newQty) {

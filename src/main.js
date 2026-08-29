@@ -71,7 +71,7 @@ function renderApp() {
   attachSearchModalEvents();
 
   if (route.name === 'home') {
-    attachHomeEvents();
+    attachHomeEvents(() => renderApp());
   } else if (route.name === 'shop') {
     attachShopEvents(() => renderApp());
   } else if (route.name === 'product-detail') {

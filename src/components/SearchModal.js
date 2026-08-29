@@ -1,7 +1,6 @@
 import { getLocalizedProducts } from '../store/products.js';
-import { addToCart } from '../store/cart.js';
+import { addToCart, getProductTotalQuantity, increaseProductQuantity, decreaseProductQuantity } from '../store/cart.js';
 import { showToast } from '../components/Toast.js';
-import { openCartDrawer } from '../components/CartDrawer.js';
 import { getLanguage, t } from '../store/i18n.js';
 
 export function renderSearchModal() {
@@ -131,21 +130,35 @@ export function attachSearchModalEvents() {
       return;
     }
 
-    resultsContainer.innerHTML = matches.map(p => `
-      <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors border border-primary/5 gap-2.5 sm:gap-3">
-        <a href="#/product/${p.id}" class="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0" onclick="document.getElementById('search-modal-backdrop').classList.add('opacity-0', 'pointer-events-none')">
-          <img src="${p.image}" alt="${p.name}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover border border-primary/5 bg-surface flex-shrink-0" loading="lazy" decoding="async" />
-          <div class="flex-1 min-w-0">
-            <span class="text-[9px] sm:text-[10px] font-label-caps uppercase text-accent font-bold block truncate">${p.category}</span>
-            <h4 class="font-display text-xs sm:text-sm font-bold text-primary truncate">${p.name}</h4>
-            <span class="font-display text-xs sm:text-sm font-bold text-primary">₹${p.price.toFixed(0)}</span>
-          </div>
-        </a>
-        <button data-product-id="${p.id}" class="search-add-btn bg-accent hover:bg-accent-hover text-on-primary text-[11px] sm:text-xs font-label-caps uppercase px-2.5 sm:px-3.5 py-1.5 rounded-lg sm:rounded-xl font-bold transition-all flex-shrink-0">
-          + Add
-        </button>
-      </div>
-    `).join('');
+    resultsContainer.innerHTML = matches.map(p => {
+      const inCartQty = getProductTotalQuantity(p.id);
+      return `
+        <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors border border-primary/5 gap-2.5 sm:gap-3">
+          <a href="#/product/${p.id}" class="flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0" onclick="document.getElementById('search-modal-backdrop').classList.add('opacity-0', 'pointer-events-none')">
+            <img src="${p.image}" alt="${p.name}" class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover border border-primary/5 bg-surface flex-shrink-0" loading="lazy" decoding="async" />
+            <div class="flex-1 min-w-0">
+              <span class="text-[9px] sm:text-[10px] font-label-caps uppercase text-accent font-bold block truncate">${p.category}</span>
+              <h4 class="font-display text-xs sm:text-sm font-bold text-primary truncate">${p.name}</h4>
+              <span class="font-display text-xs sm:text-sm font-bold text-primary">₹${p.price.toFixed(0)}</span>
+            </div>
+          </a>
+          
+          ${inCartQty > 0 ? `
+            <!-- Inline - Qty + in Search Results -->
+            <div class="flex items-center border border-accent/40 rounded-lg bg-surface p-0.5 shadow-sm flex-shrink-0">
+              <button data-product-id="${p.id}" class="search-card-qty-dec w-6 h-6 flex items-center justify-center text-primary hover:bg-accent/15 rounded font-bold text-xs transition-colors" title="Decrease">−</button>
+              <span class="px-2 text-xs font-bold text-primary font-display min-w-[18px] text-center">${inCartQty}</span>
+              <button data-product-id="${p.id}" class="search-card-qty-inc w-6 h-6 flex items-center justify-center text-primary hover:bg-accent/15 rounded font-bold text-xs transition-colors" title="Increase">+</button>
+            </div>
+          ` : `
+            <!-- Standard Add Button -->
+            <button data-product-id="${p.id}" class="search-add-btn bg-accent hover:bg-accent-hover text-on-primary text-[11px] sm:text-xs font-label-caps uppercase px-2.5 sm:px-3.5 py-1.5 rounded-lg sm:rounded-xl font-bold transition-all flex-shrink-0">
+              + Add
+            </button>
+          `}
+        </div>
+      `;
+    }).join('');
 
     resultsContainer.querySelectorAll('.search-add-btn').forEach(btn => {
       btn.onclick = (e) => {
@@ -155,9 +168,26 @@ export function attachSearchModalEvents() {
         if (prod) {
           addToCart(prod, 1);
           showToast(`Added 1× ${prod.name} to your cart.`);
-          close();
-          openCartDrawer();
+          performSearch(input.value); // Re-render search results to display [- 1 +]
         }
+      };
+    });
+
+    resultsContainer.querySelectorAll('.search-card-qty-inc').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const pId = btn.dataset.productId;
+        increaseProductQuantity(pId);
+        performSearch(input.value);
+      };
+    });
+
+    resultsContainer.querySelectorAll('.search-card-qty-dec').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const pId = btn.dataset.productId;
+        decreaseProductQuantity(pId);
+        performSearch(input.value);
       };
     });
   }

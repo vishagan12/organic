@@ -1,7 +1,6 @@
 import { getLocalizedProducts } from '../store/products.js';
-import { addToCart } from '../store/cart.js';
+import { addToCart, getProductTotalQuantity, increaseProductQuantity, decreaseProductQuantity } from '../store/cart.js';
 import { showToast } from '../components/Toast.js';
-import { openCartDrawer } from '../components/CartDrawer.js';
 import { t, getLanguage } from '../store/i18n.js';
 
 let heroCurrentSlide = 0;
@@ -10,11 +9,12 @@ let isTransitioning = false;
 
 export function renderHomePage() {
   const products = getLocalizedProducts();
-  const featured = products[0]; // Sprouted Ragi Flour or Top featured
+  const featured = products[0]; // Sprouted Ragi Flour
+  const featuredQty = getProductTotalQuantity(featured.id);
   const staples = products.slice(0, 4);
   const langObj = getLanguage() === 'ta' ? t('heroSlides') : t('heroSlides');
   const slides = Array.isArray(langObj) ? langObj : [];
-  heroCurrentSlide = 0; // Always start with Slide 0: "Fresh Vitamins in Every Sip"
+  heroCurrentSlide = 0;
   const currentSlide = slides[0];
 
   return `
@@ -217,40 +217,65 @@ export function renderHomePage() {
                   <a href="#/product/${featured.id}" class="flex-1 sm:flex-none px-3.5 sm:px-4 py-2.5 rounded-xl border border-primary/20 hover:border-primary text-primary text-xs font-label-caps uppercase tracking-wider font-bold transition-colors text-center whitespace-nowrap">
                     ${t('detailsBtn')}
                   </a>
-                  <button data-product-id="${featured.id}" class="home-quick-add-btn flex-1 sm:flex-none bg-primary hover:bg-primary-container text-surface px-4 sm:px-5 py-2.5 rounded-xl text-xs font-label-caps uppercase tracking-wider font-bold transition-all shadow-md whitespace-nowrap text-center">
-                    ${t('addToCartBtn')}
-                  </button>
+                  
+                  ${featuredQty > 0 ? `
+                    <!-- Inline - Qty + for Featured Card -->
+                    <div class="flex items-center justify-between border border-accent/40 rounded-xl bg-surface p-0.5 shadow-sm min-w-[100px]">
+                      <button data-product-id="${featured.id}" class="home-card-qty-dec w-8 h-8 flex items-center justify-center text-primary hover:bg-accent/15 rounded-lg font-bold text-base transition-colors" title="Decrease">−</button>
+                      <span class="px-2.5 text-xs sm:text-sm font-bold text-primary font-display min-w-[22px] text-center">${featuredQty}</span>
+                      <button data-product-id="${featured.id}" class="home-card-qty-inc w-8 h-8 flex items-center justify-center text-primary hover:bg-accent/15 rounded-lg font-bold text-base transition-colors" title="Increase">+</button>
+                    </div>
+                  ` : `
+                    <!-- Standard Add to Cart Button -->
+                    <button data-product-id="${featured.id}" class="home-quick-add-btn flex-1 sm:flex-none bg-primary hover:bg-primary-container text-surface px-4 sm:px-5 py-2.5 rounded-xl text-xs font-label-caps uppercase tracking-wider font-bold transition-all shadow-md whitespace-nowrap text-center">
+                      ${t('addToCartBtn')}
+                    </button>
+                  `}
                 </div>
               </div>
             </div>
 
             <!-- Smaller Product Cards (Spans 5 cols) -->
             <div class="col-span-1 lg:col-span-5 flex flex-col gap-4 sm:gap-6">
-              ${staples.slice(1, 4).map(p => `
-                <div class="bg-surface-container-low rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary/5 shadow-editorial hover:shadow-editorial-hover transition-all duration-500 flex flex-col justify-between group">
-                  <div class="flex gap-3.5 sm:gap-5 items-center">
-                    <img 
-                      src="${p.image}" 
-                      alt="${p.name}" 
-                      class="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl object-cover border border-primary/5 flex-shrink-0 group-hover:scale-105 transition-transform bg-surface" 
-                      loading="lazy" 
-                      decoding="async" 
-                    />
-                    <div class="flex-1 min-w-0">
-                      <span class="text-[9.5px] sm:text-[10px] text-accent font-label-caps uppercase tracking-[0.15em] font-bold block mb-0.5">${p.category}</span>
-                      <h4 class="font-display text-sm sm:text-lg font-bold text-primary group-hover:text-accent transition-colors truncate">${p.name}</h4>
-                      <p class="text-[11px] sm:text-xs text-on-surface-variant italic truncate mb-1">${p.botanicalName}</p>
-                      <span class="font-display text-sm sm:text-base font-bold text-primary">₹${p.price.toFixed(0)}</span>
+              ${staples.slice(1, 4).map(p => {
+                const inCartQty = getProductTotalQuantity(p.id);
+                return `
+                  <div class="bg-surface-container-low rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary/5 shadow-editorial hover:shadow-editorial-hover transition-all duration-500 flex flex-col justify-between group">
+                    <div class="flex gap-3.5 sm:gap-5 items-center">
+                      <img 
+                        src="${p.image}" 
+                        alt="${p.name}" 
+                        class="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl object-cover border border-primary/5 flex-shrink-0 group-hover:scale-105 transition-transform bg-surface" 
+                        loading="lazy" 
+                        decoding="async" 
+                      />
+                      <div class="flex-1 min-w-0">
+                        <span class="text-[9.5px] sm:text-[10px] text-accent font-label-caps uppercase tracking-[0.15em] font-bold block mb-0.5">${p.category}</span>
+                        <h4 class="font-display text-sm sm:text-lg font-bold text-primary group-hover:text-accent transition-colors truncate">${p.name}</h4>
+                        <p class="text-[11px] sm:text-xs text-on-surface-variant italic truncate mb-1">${p.botanicalName}</p>
+                        <span class="font-display text-sm sm:text-base font-bold text-primary">₹${p.price.toFixed(0)}</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 sm:gap-2.5 mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-primary/5">
+                      <a href="#/product/${p.id}" class="text-xs text-on-surface-variant hover:text-primary font-label-caps uppercase font-bold tracking-wider px-2 py-1">${t('detailsBtn')}</a>
+                      
+                      ${inCartQty > 0 ? `
+                        <!-- Inline - Qty + for Small Card -->
+                        <div class="flex items-center border border-accent/40 rounded-lg bg-surface p-0.5 shadow-sm">
+                          <button data-product-id="${p.id}" class="home-card-qty-dec w-6 h-6 flex items-center justify-center text-primary hover:bg-accent/15 rounded font-bold text-xs transition-colors" title="Decrease">−</button>
+                          <span class="px-2 text-xs font-bold text-primary font-display min-w-[18px] text-center">${inCartQty}</span>
+                          <button data-product-id="${p.id}" class="home-card-qty-inc w-6 h-6 flex items-center justify-center text-primary hover:bg-accent/15 rounded font-bold text-xs transition-colors" title="Increase">+</button>
+                        </div>
+                      ` : `
+                        <!-- Standard Quick Add Button -->
+                        <button data-product-id="${p.id}" class="home-quick-add-btn bg-accent hover:bg-accent-hover text-on-primary px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-label-caps uppercase tracking-wider font-bold transition-all shadow-sm whitespace-nowrap">
+                          ${t('quickAddBtn')}
+                        </button>
+                      `}
                     </div>
                   </div>
-                  <div class="flex items-center justify-end gap-2 sm:gap-2.5 mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-primary/5">
-                    <a href="#/product/${p.id}" class="text-xs text-on-surface-variant hover:text-primary font-label-caps uppercase font-bold tracking-wider px-2 py-1">${t('detailsBtn')}</a>
-                    <button data-product-id="${p.id}" class="home-quick-add-btn bg-accent hover:bg-accent-hover text-on-primary px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-label-caps uppercase tracking-wider font-bold transition-all shadow-sm whitespace-nowrap">
-                      ${t('quickAddBtn')}
-                    </button>
-                  </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
 
           </div>
@@ -400,7 +425,7 @@ function updateHeroSlide(slideIdx) {
   const panel = document.getElementById('hero-content-panel');
   const pillContainer = document.getElementById('hero-pill-container');
 
-  // Step 1: Smooth Fade-Out & slight upward lift
+  // Step 1: Smooth Fade-Out
   if (panel) {
     panel.style.opacity = '0';
     panel.style.transform = 'translateY(-12px)';
@@ -410,7 +435,7 @@ function updateHeroSlide(slideIdx) {
     pillContainer.style.transform = 'translateY(10px)';
   }
 
-  // Crossfade Image: Bring target slide to full opacity, fade others out smoothly
+  // Crossfade Image
   slides.forEach((_, idx) => {
     const imgEl = document.getElementById(`hero-slide-img-${idx}`);
     if (imgEl) {
@@ -431,7 +456,7 @@ function updateHeroSlide(slideIdx) {
     }
   });
 
-  // Step 2: While invisible (after 450ms), swap text contents and position for slide-in
+  // Step 2: Swap content after 450ms while invisible
   setTimeout(() => {
     const pillTitle = document.getElementById('hero-pill-title');
     const pillSub = document.getElementById('hero-pill-sub');
@@ -464,12 +489,11 @@ function updateHeroSlide(slideIdx) {
     if (p3Val) p3Val.textContent = slide.point3Val;
     if (p3Lbl) p3Lbl.textContent = slide.point3Label;
 
-    // Reset translation to enter from below
     if (panel) {
       panel.style.transform = 'translateY(12px)';
     }
 
-    // Step 3: Smooth Fade-In on next frame
+    // Step 3: Smooth Fade-In
     requestAnimationFrame(() => {
       setTimeout(() => {
         if (panel) {
@@ -486,7 +510,7 @@ function updateHeroSlide(slideIdx) {
   }, 450);
 }
 
-export function attachHomeEvents() {
+export function attachHomeEvents(rerender) {
   const langObj = getLanguage() === 'ta' ? t('heroSlides') : t('heroSlides');
   const slides = Array.isArray(langObj) ? langObj : [];
 
@@ -505,7 +529,7 @@ export function attachHomeEvents() {
     heroTimer = setInterval(() => {
       const nextSlide = (heroCurrentSlide + 1) % slides.length;
       updateHeroSlide(nextSlide);
-    }, 10000); // exactly 10 seconds
+    }, 10000);
   }
 
   function resetHeroInterval() {
@@ -514,16 +538,36 @@ export function attachHomeEvents() {
 
   startHeroInterval();
 
-  // Quick Add buttons
+  // Quick Add buttons (Turns into [- 1 +] on click, NO drawer popup)
   document.querySelectorAll('.home-quick-add-btn').forEach(btn => {
     btn.onclick = () => {
       const productId = btn.dataset.productId;
       const product = getLocalizedProducts().find(p => p.id === productId);
       if (product) {
         addToCart(product, 1);
-        showToast(`Added 1× ${product.name} to your cart.`);
-        openCartDrawer();
+        showToast(`Added 1× ${product.name} to cart.`);
+        if (rerender) rerender();
       }
+    };
+  });
+
+  // Quantity [+] on Home cards
+  document.querySelectorAll('.home-card-qty-inc').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const productId = btn.dataset.productId;
+      increaseProductQuantity(productId);
+      if (rerender) rerender();
+    };
+  });
+
+  // Quantity [-] on Home cards
+  document.querySelectorAll('.home-card-qty-dec').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const productId = btn.dataset.productId;
+      decreaseProductQuantity(productId);
+      if (rerender) rerender();
     };
   });
 }

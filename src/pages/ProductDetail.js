@@ -1,7 +1,6 @@
 import { products, getProductById, getLocalizedProducts } from '../store/products.js';
-import { addToCart } from '../store/cart.js';
+import { addToCart, getProductTotalQuantity } from '../store/cart.js';
 import { showToast } from '../components/Toast.js';
-import { openCartDrawer } from '../components/CartDrawer.js';
 import { t } from '../store/i18n.js';
 
 let selectedSizeIndex = 0;
@@ -16,6 +15,7 @@ export function renderProductDetailPage(productId) {
   quantity = 1;
   selectedImageIndex = 0;
 
+  const inCartQty = getProductTotalQuantity(product.id);
   const currentPrice = isSubscriptionMode ? (product.price * 0.9) : product.price;
   const pairedProducts = getLocalizedProducts().filter(p => p.id !== product.id).slice(0, 3);
 
@@ -137,7 +137,7 @@ export function renderProductDetailPage(productId) {
             </div>
 
             <!-- Quantity & Add to Cart -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4 mb-8 sm:mb-10 w-full">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4 mb-4 sm:mb-6 w-full">
               <div class="flex items-center justify-between sm:justify-start border border-primary/20 rounded-xl bg-surface-container-low p-1 w-full sm:w-auto">
                 <button id="pdp-qty-dec" class="w-12 sm:w-10 h-11 sm:h-12 text-primary hover:bg-surface rounded-lg font-bold transition-colors">−</button>
                 <span id="pdp-qty-val" class="w-10 text-center font-display font-bold text-primary">${quantity}</span>
@@ -151,6 +151,12 @@ export function renderProductDetailPage(productId) {
                 <span class="material-symbols-outlined text-[18px]">shopping_bag</span>
                 <span class="truncate">${t('addToShoppingCart')}</span>
               </button>
+            </div>
+
+            <!-- In-Cart Status indicator -->
+            <div id="pdp-in-cart-indicator" class="${inCartQty > 0 ? 'flex' : 'hidden'} items-center gap-2 text-xs font-bold text-primary bg-surface-container-low px-3.5 py-2 rounded-xl border border-primary/10 mb-6">
+              <span class="material-symbols-outlined text-accent text-base">check_circle</span>
+              <span>Currently in your cart: <strong id="pdp-in-cart-count" class="text-accent">${inCartQty}</strong> items</span>
             </div>
 
             <!-- Trust highlights -->
@@ -315,14 +321,23 @@ export function attachProductDetailEvents(product) {
     };
   }
 
-  // Add to cart
+  // Add to cart (NO drawer popup)
   const addToCartBtn = document.getElementById('pdp-add-to-cart-btn');
   if (addToCartBtn) {
     addToCartBtn.onclick = () => {
       const selectedSize = product.sizes[selectedSizeIndex] || 'Standard';
       addToCart(product, quantity, selectedSize, isSubscriptionMode);
       showToast(`Added ${quantity}× ${product.name} (${selectedSize}) to cart.`);
-      openCartDrawer();
+      
+      // Update in-cart indicator
+      const inCartQty = getProductTotalQuantity(product.id);
+      const indicator = document.getElementById('pdp-in-cart-indicator');
+      const countEl = document.getElementById('pdp-in-cart-count');
+      if (indicator && countEl) {
+        countEl.textContent = inCartQty;
+        indicator.classList.remove('hidden');
+        indicator.classList.add('flex');
+      }
     };
   }
 }

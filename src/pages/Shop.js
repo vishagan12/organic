@@ -1,7 +1,6 @@
 import { getLocalizedProducts } from '../store/products.js';
-import { addToCart } from '../store/cart.js';
+import { addToCart, getProductTotalQuantity, increaseProductQuantity, decreaseProductQuantity } from '../store/cart.js';
 import { showToast } from '../components/Toast.js';
-import { openCartDrawer } from '../components/CartDrawer.js';
 import { t, getLanguage } from '../store/i18n.js';
 
 let selectedCategory = 'All';
@@ -115,7 +114,7 @@ export function renderShopPage() {
         <!-- Layout Grid -->
         <div class="grid grid-cols-12 gap-6 sm:gap-8 items-start">
           
-          <!-- Desktop Filter Sidebar (hidden on mobile, visible on lg) -->
+          <!-- Desktop Filter Sidebar -->
           <aside class="hidden lg:block lg:col-span-3 sticky top-28 bg-surface-container-low p-6 sm:p-7 rounded-[2rem] border border-primary/5 shadow-editorial">
             <div class="flex flex-col gap-8">
               
@@ -187,61 +186,74 @@ export function renderShopPage() {
               </div>
             ` : `
               <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                ${filtered.map(p => `
-                  <div class="bg-surface-container-low rounded-2xl sm:rounded-3xl overflow-hidden border border-primary/5 shadow-editorial hover:shadow-editorial-hover transition-all duration-300 flex flex-col justify-between group relative">
-                    
-                    <div>
-                      <!-- Badge -->
-                      ${p.badge ? `
-                        <span class="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 bg-surface/95 backdrop-blur-sm text-primary text-[9px] sm:text-[10px] font-label-caps uppercase font-bold tracking-wider px-2 sm:px-3.5 py-0.5 sm:py-1 rounded-full border border-primary/10 shadow-sm max-w-[85%] truncate">
-                          ${p.badge}
-                        </span>
-                      ` : ''}
+                ${filtered.map(p => {
+                  const inCartQty = getProductTotalQuantity(p.id);
+                  return `
+                    <div class="bg-surface-container-low rounded-2xl sm:rounded-3xl overflow-hidden border border-primary/5 shadow-editorial hover:shadow-editorial-hover transition-all duration-300 flex flex-col justify-between group relative">
+                      
+                      <div>
+                        <!-- Badge -->
+                        ${p.badge ? `
+                          <span class="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 bg-surface/95 backdrop-blur-sm text-primary text-[9px] sm:text-[10px] font-label-caps uppercase font-bold tracking-wider px-2 sm:px-3.5 py-0.5 sm:py-1 rounded-full border border-primary/10 shadow-sm max-w-[85%] truncate">
+                            ${p.badge}
+                          </span>
+                        ` : ''}
 
-                      <!-- Product Image -->
-                      <a href="#/product/${p.id}" class="aspect-[4/3] sm:aspect-[4/3] w-full overflow-hidden bg-surface relative block">
-                        <img 
-                          src="${p.image}" 
-                          alt="${p.name}" 
-                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                          loading="lazy" 
-                          decoding="async" 
-                        />
-                      </a>
-
-                      <!-- Card Content -->
-                      <div class="p-3 sm:p-6 pb-2">
-                        <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
-                          <span class="text-[9px] sm:text-[10px] font-label-caps uppercase text-accent font-bold tracking-wider truncate">${p.category}</span>
-                          <div class="flex items-center gap-0.5 text-[11px] sm:text-xs text-primary font-semibold flex-shrink-0">
-                            <span class="material-symbols-outlined text-accent text-[13px] sm:text-[14px] fill">star</span>
-                            <span>${p.rating}</span>
-                          </div>
-                        </div>
-
-                        <a href="#/product/${p.id}" class="block group-hover:text-accent transition-colors">
-                          <h3 class="font-display text-sm sm:text-xl font-bold text-primary mb-0.5 sm:mb-1 line-clamp-1">${p.name}</h3>
+                        <!-- Product Image -->
+                        <a href="#/product/${p.id}" class="aspect-[4/3] sm:aspect-[4/3] w-full overflow-hidden bg-surface relative block">
+                          <img 
+                            src="${p.image}" 
+                            alt="${p.name}" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                            loading="lazy" 
+                            decoding="async" 
+                          />
                         </a>
-                        <p class="text-[11px] sm:text-xs text-on-surface-variant italic mb-1.5 line-clamp-1">${p.botanicalName}</p>
-                        <p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-2 hidden sm:block">${p.description}</p>
-                      </div>
-                    </div>
 
-                    <div class="p-3 sm:p-6 pt-0">
-                      <div class="pt-2 sm:pt-3 border-t border-primary/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                        <span class="font-display text-base sm:text-xl font-bold text-primary">₹${p.price.toFixed(0)}</span>
-                        
-                        <button 
-                          data-product-id="${p.id}" 
-                          class="shop-quick-add-btn w-full sm:w-auto bg-accent hover:bg-accent-hover text-on-primary px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-label-caps text-[11px] sm:text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 shadow-sm whitespace-nowrap text-center"
-                        >
-                          ${t('quickAddBtn')}
-                        </button>
-                      </div>
-                    </div>
+                        <!-- Card Content -->
+                        <div class="p-3 sm:p-6 pb-2">
+                          <div class="flex items-center justify-between gap-1 mb-1 sm:mb-1.5">
+                            <span class="text-[9px] sm:text-[10px] font-label-caps uppercase text-accent font-bold tracking-wider truncate">${p.category}</span>
+                            <div class="flex items-center gap-0.5 text-[11px] sm:text-xs text-primary font-semibold flex-shrink-0">
+                              <span class="material-symbols-outlined text-accent text-[13px] sm:text-[14px] fill">star</span>
+                              <span>${p.rating}</span>
+                            </div>
+                          </div>
 
-                  </div>
-                `).join('')}
+                          <a href="#/product/${p.id}" class="block group-hover:text-accent transition-colors">
+                            <h3 class="font-display text-sm sm:text-xl font-bold text-primary mb-0.5 sm:mb-1 line-clamp-1">${p.name}</h3>
+                          </a>
+                          <p class="text-[11px] sm:text-xs text-on-surface-variant italic mb-1.5 line-clamp-1">${p.botanicalName}</p>
+                          <p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed mb-2 hidden sm:block">${p.description}</p>
+                        </div>
+                      </div>
+
+                      <div class="p-3 sm:p-6 pt-0">
+                        <div class="pt-2 sm:pt-3 border-t border-primary/5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                          <span class="font-display text-base sm:text-xl font-bold text-primary">₹${p.price.toFixed(0)}</span>
+                          
+                          ${inCartQty > 0 ? `
+                            <!-- Interactive - Qty + Selector -->
+                            <div class="flex items-center justify-between border border-accent/40 rounded-lg sm:rounded-xl bg-surface p-0.5 shadow-sm">
+                              <button data-product-id="${p.id}" class="shop-card-qty-dec w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-primary hover:bg-accent/15 rounded-md font-bold text-sm transition-colors" title="Decrease">−</button>
+                              <span class="px-2 text-xs sm:text-sm font-bold text-primary font-display min-w-[22px] text-center">${inCartQty}</span>
+                              <button data-product-id="${p.id}" class="shop-card-qty-inc w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-primary hover:bg-accent/15 rounded-md font-bold text-sm transition-colors" title="Increase">+</button>
+                            </div>
+                          ` : `
+                            <!-- Standard Add to Cart Button -->
+                            <button 
+                              data-product-id="${p.id}" 
+                              class="shop-quick-add-btn w-full sm:w-auto bg-accent hover:bg-accent-hover text-on-primary px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-label-caps text-[11px] sm:text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 shadow-sm whitespace-nowrap text-center"
+                            >
+                              ${t('quickAddBtn')}
+                            </button>
+                          `}
+                        </div>
+                      </div>
+
+                    </div>
+                  `;
+                }).join('')}
               </div>
             `}
           </main>
@@ -319,7 +331,7 @@ export function attachShopEvents(rerender) {
     };
   }
 
-  // Quick Add
+  // Quick Add Button (Turns into - 1 + upon adding, NO drawer popup)
   document.querySelectorAll('.shop-quick-add-btn').forEach(btn => {
     btn.onclick = (e) => {
       e.preventDefault();
@@ -327,9 +339,29 @@ export function attachShopEvents(rerender) {
       const product = getLocalizedProducts().find(p => p.id === productId);
       if (product) {
         addToCart(product, 1);
-        showToast(`Added 1× ${product.name} to your cart.`);
-        openCartDrawer();
+        showToast(`Added 1× ${product.name} to cart.`);
+        rerender(); // Re-render to immediately display [- 1 +]
       }
+    };
+  });
+
+  // Quantity Increase [+]
+  document.querySelectorAll('.shop-card-qty-inc').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const productId = btn.dataset.productId;
+      increaseProductQuantity(productId);
+      rerender();
+    };
+  });
+
+  // Quantity Decrease [-]
+  document.querySelectorAll('.shop-card-qty-dec').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const productId = btn.dataset.productId;
+      decreaseProductQuantity(productId);
+      rerender();
     };
   });
 }
