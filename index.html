@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" style="background-color: #F4EBD9;">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aura Botanica | Organic Wellness, Sprouted Heritage Grains & Pure Apothecary Living</title>
+  <meta name="description" content="Discover pure holistic vitality with Aura Botanica. Certified organic sprouted ragi, biodynamic ancient grains, cold-pressed tonics, and sacred herbal rituals." />
+  
+  <!-- Preconnect & Asynchronous Font Loading (English & Premium Tamil Typography) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Tamil:wght@400;500;600;700&family=Mukta+Malar:wght@400;500;600;700&family=Noto+Serif+Tamil:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN for instant rendering in any browser context -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0D2619",
+            "primary-container": "#173827",
+            "on-primary": "#FFFFFF",
+            "on-primary-container": "#9AB3A5",
+            
+            "secondary": "#57534A",
+            "secondary-container": "#E2D3B8",
+            "on-secondary": "#FFFFFF",
+            
+            "accent": "#D97736",
+            "accent-hover": "#C26527",
+            "accent-light": "#F5E4D3",
+            "tertiary": "#8A4C1B",
+            "tertiary-container": "#EED8C3",
+            
+            // Rich Warm Cream Off-White
+            "surface": "#F4EBD9",
+            "background": "#F4EBD9",
+            "surface-dim": "#E8DCBE",
+            "surface-bright": "#FAF4E8",
+            "surface-container-lowest": "#FAF4E8",
+            "surface-container-low": "#E8DCBE",
+            "surface-container": "#DDD0AC",
+            "surface-container-high": "#D2C29B",
+            "surface-container-highest": "#C6B48B",
+            "surface-variant": "#DDD0AC",
+            
+            "on-background": "#142419",
+            "on-surface": "#142419",
+            "on-surface-variant": "#4E5750",
+            
+            "outline": "#7A827B",
+            "outline-variant": "#C0B29A",
+            "error": "#B82C2C",
+            "on-error": "#FFFFFF",
+          },
+          fontFamily: {
+            "display-lg": ["'Playfair Display'", "'Noto Serif Tamil'", "Georgia", "serif"],
+            "headline-md": ["'Playfair Display'", "'Noto Serif Tamil'", "Georgia", "serif"],
+            "headline-sm": ["'Playfair Display'", "'Noto Serif Tamil'", "Georgia", "serif"],
+            "body-lg": ["'Inter'", "'Mukta Malar'", "'Anek Tamil'", "system-ui", "sans-serif"],
+            "body-md": ["'Inter'", "'Mukta Malar'", "'Anek Tamil'", "system-ui", "sans-serif"],
+            "label-caps": ["'Inter'", "'Mukta Malar'", "'Anek Tamil'", "system-ui", "sans-serif"],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Hardcoded explicit fallback CSS ensuring warm cream off-white in all rendering engines -->
+  <style>
+    html, body, #app {
+      background-color: #F4EBD9 !important;
+      color: #142419 !important;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .bg-surface, .bg-background {
+      background-color: #F4EBD9 !important;
+    }
+    .bg-surface-container-low {
+      background-color: #E8DCBE !important;
+    }
+    .bg-surface-container {
+      background-color: #DDD0AC !important;
+    }
+    .bg-surface-container-lowest {
+      background-color: #FAF4E8 !important;
+    }
+    .bg-surface-container-high {
+      background-color: #D2C29B !important;
+    }
+  </style>
+
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body style="background-color: #F4EBD9; color: #142419;" class="bg-surface font-body text-on-surface antialiased selection:bg-accent selection:text-on-primary">
+  <div id="app" style="background-color: #F4EBD9;"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
